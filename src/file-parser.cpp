@@ -1,82 +1,51 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-///////////////////////////////////////////////////////////////////////////////
-//
-// Word-Stacker - Open-source, non-commercial, word frequency analysis tool.
-// Copyright (C) 2017 Ziesche Til Newman (tilnewman@gmail.com)
-//
-// This software is provided 'as-is', without any express or implied warranty.
-// In no event will the authors be held liable for any damages arising from
-// the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-//  1. The origin of this software must not be misrepresented; you must not
-//     claim that you wrote the original software.  If you use this software
-//     in a product, an acknowledgment in the product documentation would be
-//     appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not
-//     be misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
-//
-///////////////////////////////////////////////////////////////////////////////
 //
 // file-parser.cpp
 //
-#include "file-parser.hpp"
 #include "assert-or-throw.hpp"
-#include "word-list.hpp"
+#include "file-parser.hpp"
 #include "word-count-stats.hpp"
+#include "word-list.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/algorithm.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
-#include <map>
-#include <cmath>
-#include <bitset>
-#include <vector>
-#include <fstream>
-#include <sstream>
 #include <algorithm>
-
+#include <bitset>
+#include <cmath>
+#include <fstream>
+#include <map>
+#include <sstream>
+#include <vector>
 
 namespace word_stacker
 {
 
     FileParser::FileParser(
-        ReportMaker &      reportMaker,
+        ReportMaker & reportMaker,
         const ArgsParser & ARGS,
-        const WordList &   COMMON_WORDS,
-        const WordList &   IGNORED_WORDS,
-        const WordList &   FLAGGED_WORDS)
-    :
-        m_wordCounts    (),
-        m_lineCount     (0),
-        m_unCLineCount  (0),
-        m_singleCount   (0),
-        m_ignoredCount  (0),
-        m_fileCount     (0),
-        m_dirCount      (0),
-        m_flaggedCount  (0),
-        m_lengthCountMap()
+        const WordList & COMMON_WORDS,
+        const WordList & IGNORED_WORDS,
+        const WordList & FLAGGED_WORDS)
+        : m_wordCounts()
+        , m_lineCount(0)
+        , m_unCLineCount(0)
+        , m_singleCount(0)
+        , m_ignoredCount(0)
+        , m_fileCount(0)
+        , m_dirCount(0)
+        , m_flaggedCount(0)
+        , m_lengthCountMap()
     {
         M_LOG_AND_ASSERT_OR_THROW(
             ((ARGS.parseAs() == ParseType::Text) || (ARGS.parseAs() == ParseType::Code)),
             "word_stacker::FileParser::Constructor(parse_type="
-            << ARGS.parseAs() << ") that parse type is not yet supported.");
+                << ARGS.parseAs() << ") that parse type is not yet supported.");
 
-        ParseSupplies parseSupplies(
-            reportMaker,
-            ARGS,
-            COMMON_WORDS,
-            IGNORED_WORDS,
-            FLAGGED_WORDS);
-        
+        ParseSupplies parseSupplies(reportMaker, ARGS, COMMON_WORDS, IGNORED_WORDS, FLAGGED_WORDS);
+
         auto const & PATHS{ ARGS.parsePaths() };
         for (auto const & PATH : PATHS)
         {
@@ -100,29 +69,26 @@ namespace word_stacker
         m_wordCounts.reserve(parseSupplies.m_wordCountMap.size());
         for (auto const & PAIR : parseSupplies.m_wordCountMap)
         {
-            m_wordCounts.push_back( WordCount(PAIR.first, PAIR.second) );
+            m_wordCounts.push_back(WordCount(PAIR.first, PAIR.second));
         }
 
         parseSupplies.m_wordCountMap.clear();
 
         auto const STATS{ Statistics::calculate(
-            m_wordCounts,
-            "Frequency List\t",
-            parseSupplies.m_reportMaker.frequencyListLength()) };
+            m_wordCounts, "Frequency List\t", parseSupplies.m_reportMaker.frequencyListLength()) };
 
-        logStatistics(parseSupplies.m_reportMaker, STATS );
+        logStatistics(parseSupplies.m_reportMaker, STATS);
     }
-
 
     const WordCount & FileParser::wordCountObj(const std::size_t INDEX) const
     {
-        M_LOG_AND_ASSERT_OR_THROW((INDEX < m_wordCounts.size()),
+        M_LOG_AND_ASSERT_OR_THROW(
+            (INDEX < m_wordCounts.size()),
             "FileParser::wordCountObj(index=" << INDEX << ") index out of range.  (max="
-            << m_wordCounts.size() << ")");
+                                              << m_wordCounts.size() << ")");
 
         return m_wordCounts[INDEX];
     }
-
 
     void FileParser::parseDirectoryOrFile(ParseSupplies & supplies, const std::string & PATH_STR)
     {
@@ -147,10 +113,8 @@ namespace word_stacker
         }
     }
 
-
     bool FileParser::doesFilenameMatchParseType(
-        ParseSupplies &     supplies,
-        const std::string & FILENAME) const
+        ParseSupplies & supplies, const std::string & FILENAME) const
     {
         StrVec_t fileExtensions;
 
@@ -158,9 +122,7 @@ namespace word_stacker
         {
             case ParseType::Text:
             {
-                const StrVec_t TEXT_FILE_EXTENSIONS = {
-                    ".txt",
-                    ".rtf" };
+                const StrVec_t TEXT_FILE_EXTENSIONS = { ".txt", ".rtf" };
 
                 fileExtensions = TEXT_FILE_EXTENSIONS;
                 break;
@@ -168,60 +130,20 @@ namespace word_stacker
             case ParseType::Code:
             {
                 const StrVec_t CODE_FILE_EXTENSIONS = {
-                    ".hpp",
-                    ".cpp",
-                    ".h",
-                    ".c",
-                    ".cs",
-                    ".class",
-                    ".java",
-                    ".rb",
-                    ".rake",
-                    ".php",
-                    ".php3",
-                    ".php4",
-                    ".js",
-                    ".m",
-                    ".mm",
-                    ".cmd",
-                    ".bat",
-                    ".asm",
-                    ".s",
-                    ".sh",
-                    ".bat",
-                    ".hxx",
-                    ".cxx",
-                    ".jsp",
-                    ".ll",
-                    ".pl",
-                    ".y",
-                    ".yxx",
-                    ".asp",
-                    ".aspx",
-                    ".inc",
-                    ".jsp",
-                    ".jspx",
-                    ".scpt",
-                    ".do",
-                    ".action",
-                    ".wss",
-                    ".pl" };
+                    ".hpp",  ".cpp",  ".h",    ".c",      ".cs",  ".class", ".java", ".rb",
+                    ".rake", ".php",  ".php3", ".php4",   ".js",  ".m",     ".mm",   ".cmd",
+                    ".bat",  ".asm",  ".s",    ".sh",     ".bat", ".hxx",   ".cxx",  ".jsp",
+                    ".ll",   ".pl",   ".y",    ".yxx",    ".asp", ".aspx",  ".inc",  ".jsp",
+                    ".jspx", ".scpt", ".do",   ".action", ".wss", ".pl"
+                };
 
                 fileExtensions = CODE_FILE_EXTENSIONS;
 
                 if (supplies.M_ARGS.willParseHTML())
                 {
-                    const StrVec_t HTML_FILE_EXTENSIONS = {
-                        ".xslt",
-                        ".css",
-                        ".xsl",
-                        ".htm",
-                        ".html",
-                        ".xhtml",
-                        ".jhtml",
-                        ".phtml",
-                        ".rss",
-                        ".xml" };
+                    const StrVec_t HTML_FILE_EXTENSIONS = { ".xslt", ".css",   ".xsl",   ".htm",
+                                                            ".html", ".xhtml", ".jhtml", ".phtml",
+                                                            ".rss",  ".xml" };
 
                     std::copy(
                         HTML_FILE_EXTENSIONS.begin(),
@@ -238,7 +160,7 @@ namespace word_stacker
             }
         }
 
-        for(auto const & EXTENSION : fileExtensions)
+        for (auto const & EXTENSION : fileExtensions)
         {
             if (boost::ends_with(FILENAME, EXTENSION))
             {
@@ -249,15 +171,16 @@ namespace word_stacker
         return false;
     }
 
-
     void FileParser::openFileAndParse(ParseSupplies & supplies, const std::string & FILE_PATH)
     {
         std::ifstream file;
         file.open(FILE_PATH);
 
-        M_LOG_AND_ASSERT_OR_THROW((file.is_open()),
-            "word_stacker::FileParser::ParseAsText(file_path=\"" << FILE_PATH << "\") failed to open that file.");
-        
+        M_LOG_AND_ASSERT_OR_THROW(
+            (file.is_open()),
+            "word_stacker::FileParser::ParseAsText(file_path=\""
+                << FILE_PATH << "\") failed to open that file.");
+
         try
         {
             switch (supplies.M_ARGS.parseAs())
@@ -284,17 +207,17 @@ namespace word_stacker
             file.close();
             throw;
         }
-        
+
         file.close();
     }
-
 
     void FileParser::parseFileContentsText(ParseSupplies & supplies, std::ifstream & file)
     {
         ++m_fileCount;
 
         const std::string CHARS_TO_KEEP{
-            "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDSFGHJKLZXCVBNM-'" };
+            "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDSFGHJKLZXCVBNM-'"
+        };
 
         std::string line;
         while (std::getline(file, line))
@@ -313,31 +236,31 @@ namespace word_stacker
             {
                 boost::to_lower(word);
                 boost::trim(word);
-                
+
                 changeInvalidCharactersToSpaces(word, CHARS_TO_KEEP);
                 boost::trim(word);
 
-                //Note that these two replacements, when in this order,
-                //handles the case of four spaces appearing together.
+                // Note that these two replacements, when in this order,
+                // handles the case of four spaces appearing together.
                 boost::replace_all(word, "   ", " ");
                 boost::replace_all(word, "  ", " ");
-                
-                //handle words that had unicode apostrophes or ellipsis
+
+                // handle words that had unicode apostrophes or ellipsis
                 if (word.find(' ') != std::string::npos)
                 {
-                    //handle apostrophes
-                    const StrVec_t APOSTR_WORD_ENDINGS
-                        = { " t ", " s ", " d ", " m ", " ll ", " ve ", " re " };
+                    // handle apostrophes
+                    const StrVec_t APOSTR_WORD_ENDINGS = { " t ",  " s ",  " d ", " m ",
+                                                           " ll ", " ve ", " re " };
 
                     for (auto const & ENDING : APOSTR_WORD_ENDINGS)
                     {
-                        auto const REPLACEMENT{ boost::replace_first_copy(
-                            boost::replace_last_copy(ENDING, " ", ""), " ", "'").append(" ") };
+                        auto const REPLACEMENT{
+                            boost::replace_first_copy(
+                                boost::replace_last_copy(ENDING, " ", ""), " ", "'")
+                                .append(" ")
+                        };
 
-                        boost::replace_all(
-                            word,
-                            ENDING,
-                            REPLACEMENT);
+                        boost::replace_all(word, ENDING, REPLACEMENT);
 
                         auto const ENDING_RIGHT_TRIM{ boost::trim_right_copy(ENDING) };
 
@@ -350,7 +273,7 @@ namespace word_stacker
                         }
                     }
 
-                    //handle ellipsis
+                    // handle ellipsis
                     if (word.find(' ') != std::string::npos)
                     {
                         std::istringstream issSubWords(word);
@@ -375,13 +298,13 @@ namespace word_stacker
         }
     }
 
-
     void FileParser::parseFileContentsCode(ParseSupplies & supplies, std::ifstream & file)
     {
         ++m_fileCount;
 
         const std::string CHARS_TO_KEEP{
-            "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDSFGHJKLZXCVBNM1234567890_" };
+            "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDSFGHJKLZXCVBNM1234567890_"
+        };
 
         std::string line;
         while (std::getline(file, line))
@@ -411,7 +334,7 @@ namespace word_stacker
                 m_lengthCountMap[ORIG_LINE_LENGTH]++;
             }
 
-            //remove in-line comments
+            // remove in-line comments
             auto const COMMENT_POS{ line.find("//") };
             if (COMMENT_POS != std::string::npos)
             {
@@ -420,22 +343,22 @@ namespace word_stacker
 
             boost::replace_all(line, "\\\"", "");
 
-            //remove text in double quotes
+            // remove text in double quotes
             if (line.find('\"') != std::string::npos)
             {
                 auto isDeletingString{ false };
 
                 for (auto iter{ line.begin() }; iter != line.end(); ++iter)
                 {
-                    if ('\"' == * iter)
+                    if ('\"' == *iter)
                     {
-                        * iter = ' ';
-                        isDeletingString = ! isDeletingString;
+                        *iter = ' ';
+                        isDeletingString = !isDeletingString;
                     }
 
                     if (isDeletingString)
                     {
-                        * iter = ' ';
+                        *iter = ' ';
                     }
                 }
             }
@@ -452,7 +375,6 @@ namespace word_stacker
             }
         }
     }
-
 
     void FileParser::parseWord(ParseSupplies & supplies, const std::string & WORD)
     {
@@ -473,9 +395,8 @@ namespace word_stacker
             ++m_flaggedCount;
         }
 
-        auto const WILL_SKIP_IGNORED_COMMON{
-            (supplies.M_ARGS.willIgnoreCommonWords() &&
-            supplies.M_COMMON_WORDS.contains(WORD)) };
+        auto const WILL_SKIP_IGNORED_COMMON{ (
+            supplies.M_ARGS.willIgnoreCommonWords() && supplies.M_COMMON_WORDS.contains(WORD)) };
 
         auto const WILL_SKIP_IGNORED{ supplies.M_IGNORED_WORDS.contains(WORD) };
 
@@ -489,14 +410,13 @@ namespace word_stacker
         }
     }
 
-
     void FileParser::logStatistics(ReportMaker & reportMaker, const FreqStats & STATS)
     {
-        reportMaker.fileStatsStream() << m_fileCount << " File"
-            << ((1 == m_fileCount) ? "" : "s") << " Parsed";
+        reportMaker.fileStatsStream()
+            << m_fileCount << " File" << ((1 == m_fileCount) ? "" : "s") << " Parsed";
 
-        reportMaker.fileStatsStream() << m_dirCount << " Director"
-            << ((1 == m_dirCount) ? "y" : "ies") << " Parsed";
+        reportMaker.fileStatsStream()
+            << m_dirCount << " Director" << ((1 == m_dirCount) ? "y" : "ies") << " Parsed";
 
         reportMaker.fileStatsStream() << '-';
         reportMaker.fileStatsStream() << "Total Line Count\t=" << m_lineCount;
@@ -526,18 +446,16 @@ namespace word_stacker
         }
     }
 
-
     void FileParser::changeInvalidCharactersToSpaces(
-        std::string &       s,
-        const std::string & CHARS_TO_KEEP) const
+        std::string & s, const std::string & CHARS_TO_KEEP) const
     {
         for (auto iter{ s.begin() }; iter != s.end(); ++iter)
         {
-            if (CHARS_TO_KEEP.find( * iter) == std::string::npos)
+            if (CHARS_TO_KEEP.find(*iter) == std::string::npos)
             {
-                * iter = ' ';
+                *iter = ' ';
             }
         }
     }
 
-}
+} // namespace word_stacker

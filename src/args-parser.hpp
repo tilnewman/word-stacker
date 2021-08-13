@@ -1,27 +1,3 @@
-///////////////////////////////////////////////////////////////////////////////
-//
-// Word-Stacker - Open-source, non-commercial, word frequency analysis tool.
-// Copyright (C) 2017 Ziesche Til Newman (tilnewman@gmail.com)
-//
-// This software is provided 'as-is', without any express or implied warranty.
-// In no event will the authors be held liable for any damages arising from
-// the use of this software.
-//
-// Permission is granted to anyone to use this software for any purpose,
-// including commercial applications, and to alter it and redistribute it
-// freely, subject to the following restrictions:
-//
-//  1. The origin of this software must not be misrepresented; you must not
-//     claim that you wrote the original software.  If you use this software
-//     in a product, an acknowledgment in the product documentation would be
-//     appreciated but is not required.
-//
-//  2. Altered source versions must be plainly marked as such, and must not
-//     be misrepresented as being the original software.
-//
-//  3. This notice may not be removed or altered from any source distribution.
-//
-///////////////////////////////////////////////////////////////////////////////
 #ifndef WORDSTACKER_ARGSPARSER_HPP_INCLUDED
 #define WORDSTACKER_ARGSPARSER_HPP_INCLUDED
 //
@@ -30,79 +6,75 @@
 #include "parse-type-enum.hpp"
 #include "report-maker.hpp"
 
+#include <cstddef> //for std::size_t
 #include <string>
 #include <vector>
-#include <cstddef> //for std::size_t
-
 
 namespace word_stacker
 {
 
     using StrVec_t = std::vector<std::string>;
 
-
-    //Responsible for parsing command line arguments into a queryable interface.
+    // Responsible for parsing command line arguments into a queryable interface.
     class ArgsParser
     {
-    public:
+      public:
         ArgsParser(ReportMaker & reportMaker, const std::size_t ARGC, const char * const ARGV[]);
 
         void ParseCommandLineArguments(
-            ReportMaker &      reportMaker,
-            const std::size_t  ARGC,
-            const char * const ARGV[]);
+            ReportMaker & reportMaker, const std::size_t ARGC, const char * const ARGV[]);
 
         void EnsureValidStartingValues(ReportMaker &);
 
-        inline ParseType::Enum parseAs() const  { return m_parseType; }
+        inline ParseType::Enum parseAs() const { return m_parseType; }
 
-        inline float screenWidthF() const       { return m_screenWidth; }
-        inline float screenHeightF() const      { return m_screenHeight; }
+        inline float screenWidthF() const { return m_screenWidth; }
+        inline float screenHeightF() const { return m_screenHeight; }
 
-        inline unsigned screenWidthU() const    { return static_cast<unsigned>(m_screenWidth); }
-        inline unsigned screenHeightU() const   { return static_cast<unsigned>(m_screenHeight); }
+        inline unsigned screenWidthU() const { return static_cast<unsigned>(m_screenWidth); }
+        inline unsigned screenHeightU() const { return static_cast<unsigned>(m_screenHeight); }
 
-        inline unsigned bitsPerPixel() const    { return m_bitsPerPixel; }
+        inline unsigned bitsPerPixel() const { return m_bitsPerPixel; }
 
-        inline bool isPathADirectory() const    { return m_isPathADireectory; }
+        inline bool isPathADirectory() const { return m_isPathADireectory; }
 
-        inline unsigned fontSizeMin() const     { return m_fontSizeMin; }
+        inline unsigned fontSizeMin() const { return m_fontSizeMin; }
 
-        inline unsigned fontSizeMax() const     { return m_fontSizeMax; }
+        inline unsigned fontSizeMax() const { return m_fontSizeMax; }
 
-        inline bool willSkipDisplay() const     { return m_willSkipDisplay; }
+        inline bool willSkipDisplay() const { return m_willSkipDisplay; }
 
-        inline bool willVerbose() const         { return m_willVerbose; }
+        inline bool willVerbose() const { return m_willVerbose; }
 
-        inline bool willParseHTML() const       { return m_willParseHTML; }
+        inline bool willParseHTML() const { return m_willParseHTML; }
 
-        inline const StrVec_t & parsePaths() const          { return m_paths; }
+        inline const StrVec_t & parsePaths() const { return m_paths; }
 
-        inline const StrVec_t & ignoredWordsPaths() const   { return m_ignoreWordsPaths; }
+        inline const StrVec_t & ignoredWordsPaths() const { return m_ignoreWordsPaths; }
 
-        inline const StrVec_t & flaggedWordsPaths() const   { return m_flaggedWordsPaths; }
+        inline const StrVec_t & flaggedWordsPaths() const { return m_flaggedWordsPaths; }
 
-        inline bool willIgnoreCommonWords() const           { return m_willIgnoreCommonWords; }
+        inline bool willIgnoreCommonWords() const { return m_willIgnoreCommonWords; }
 
-        inline const std::string fontPath() const           { return m_fontPath; }
+        inline const std::string fontPath() const { return m_fontPath; }
 
-        inline const std::string commonWordsPath() const    { return m_commonWordsPath; }
+        inline const std::string commonWordsPath() const { return m_commonWordsPath; }
 
-    private:
+      private:
         void ParseVideoMode(ReportMaker &);
 
         unsigned convertToUnsigned(const std::string &) const;
 
         bool parseCommandLineArgFlag(
             const std::string & ARG,
-            bool &              memberVar,
+            bool & memberVar,
             const std::string & CMD_FULL,
             const std::string & CMD_FLAG) const;
 
         const std::string parseCommandLineArgFile(
-            const std::size_t   ARGC,
-            const char * const  ARGV[],
-            std::size_t &       i,
+            const std::size_t ARGC,
+            const char * const ARGV[],
+            std::size_t & i,
             const std::string & CMD_FULL,
             const std::string & CMD_FLAG) const;
 
@@ -110,7 +82,7 @@ namespace word_stacker
 
         const std::string findLocalFont() const;
 
-    private:
+      private:
         static const std::string M_ARG_PARSE_AS;
         static const std::string M_ARG_PARSE_AS_SHORT;
         static const std::string M_ARG_FONT_FILE;
@@ -155,6 +127,6 @@ namespace word_stacker
         bool m_willParseHTML;
     };
 
-}
+} // namespace word_stacker
 
-#endif //WORDSTACKER_ARGSPARSER_HPP_INCLUDED
+#endif // WORDSTACKER_ARGSPARSER_HPP_INCLUDED
