@@ -24,9 +24,45 @@
 *.lai
 *.la
 *.a
+*.oa
 *.lib
 
 # Executables
 *.exe
 *.out
 *.app
+
+# Visual Studio
+*.ncb
+*.sln
+*.suo
+*.vap
+*.dbp
+*.ilk
+
+# Windows
+Thumbs.db
+
+# MacOS
+*.DS_Store
+
+# Common Directories
+build/
+.vscode/
+.vs/
+.xcode/
+Release/
+Debug/
+
+# CMake
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
