@@ -418,7 +418,7 @@ namespace word_stacker
 
         if (m_commonWordsPath.empty() && (m_parseType == ParseType::Text))
         {
-            auto COMMON_FILE_DEFAULT_PATH{ fs::canonical("./common-words-ordered.txt") };
+            auto COMMON_FILE_DEFAULT_PATH{ fs::absolute("./common-words-ordered.txt") };
             if ((fs::exists(COMMON_FILE_DEFAULT_PATH)) &&
                 (fs::is_regular_file(COMMON_FILE_DEFAULT_PATH)))
             {
@@ -564,19 +564,19 @@ namespace word_stacker
 
         namespace fs = std::filesystem;
 
-        auto WINDOWS_ARIAL_PATH_LOWERCASE{ fs::canonical("C:\\Windows\\Fonts\\arial.ttf") };
+        auto WINDOWS_ARIAL_PATH_LOWERCASE{ fs::absolute("C:\\Windows\\Fonts\\arial.ttf") };
         if (fs::exists(WINDOWS_ARIAL_PATH_LOWERCASE))
         {
             return WINDOWS_ARIAL_PATH_LOWERCASE.string();
         }
 
-        auto WINDOWS_ARIAL_PATH_UPPERCASE{ fs::canonical("C:\\Windows\\Fonts\\ARIAL.TTF") };
+        auto WINDOWS_ARIAL_PATH_UPPERCASE{ fs::absolute("C:\\Windows\\Fonts\\ARIAL.TTF") };
         if (fs::exists(WINDOWS_ARIAL_PATH_UPPERCASE))
         {
             return WINDOWS_ARIAL_PATH_UPPERCASE.string();
         }
 
-        auto const HOME_PATH{ fs::canonical(std::getenv("HOME")) };
+        auto const HOME_PATH{ fs::absolute(std::getenv("HOME")) };
         if (fs::exists(HOME_PATH) && fs::is_directory(HOME_PATH))
         {
             auto MAC_ARIAL_PATH_LOWERCASE{ HOME_PATH / fs::path("Library/Fonts/arial.ttf") };
@@ -600,7 +600,7 @@ namespace word_stacker
         namespace fs = std::filesystem;
 
         fs::directory_iterator end_iter;
-        for (fs::directory_iterator iter(fs::canonical(".")); iter != end_iter; ++iter)
+        for (fs::directory_iterator iter(fs::absolute(".")); iter != end_iter; ++iter)
         {
             auto const PATH_STR{ iter->path().string() };
 
