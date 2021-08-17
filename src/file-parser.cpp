@@ -5,16 +5,17 @@
 //
 #include "assert-or-throw.hpp"
 #include "file-parser.hpp"
+#include "strings.hpp"
 #include "word-count-stats.hpp"
 #include "word-list.hpp"
 
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
 
 #include <algorithm>
 #include <bitset>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -163,7 +164,7 @@ namespace word_stacker
 
         for (auto const & EXTENSION : fileExtensions)
         {
-            if (boost::ends_with(FILENAME, EXTENSION))
+            if (utilz::endsWith(FILENAME, EXTENSION))
             {
                 return true;
             }
@@ -226,8 +227,8 @@ namespace word_stacker
             ++m_lineCount;
             ++m_unCLineCount;
 
-            boost::replace_all(line, "\r", "");
-            boost::replace_all(line, "\n", "");
+            utilz::replaceAll(line, "\r", "");
+            utilz::replaceAll(line, "\n", "");
 
             m_lengthCountMap[line.length()]++;
 
@@ -236,15 +237,15 @@ namespace word_stacker
             while (iss >> word)
             {
                 boost::to_lower(word);
-                boost::trim(word);
+                utilz::trimWhitespace(word);
 
                 changeInvalidCharactersToSpaces(word, CHARS_TO_KEEP);
-                boost::trim(word);
+                utilz::trimWhitespace(word);
 
                 // Note that these two replacements, when in this order,
                 // handles the case of four spaces appearing together.
-                boost::replace_all(word, "   ", " ");
-                boost::replace_all(word, "  ", " ");
+                utilz::replaceAll(word, "   ", " ");
+                utilz::replaceAll(word, "  ", " ");
 
                 // handle words that had unicode apostrophes or ellipsis
                 if (word.find(' ') != std::string::npos)
@@ -261,16 +262,16 @@ namespace word_stacker
                                 .append(" ")
                         };
 
-                        boost::replace_all(word, ENDING, REPLACEMENT);
+                        utilz::replaceAll(word, ENDING, REPLACEMENT);
 
                         auto const ENDING_RIGHT_TRIM{ boost::trim_right_copy(ENDING) };
 
-                        if (boost::ends_with(word, ENDING_RIGHT_TRIM))
+                        if (utilz::endsWith(word, ENDING_RIGHT_TRIM))
                         {
-                            boost::replace_all(
+                            utilz::replaceAll(
                                 word,
                                 ENDING_RIGHT_TRIM,
-                                boost::replace_all_copy(ENDING_RIGHT_TRIM, " ", "'"));
+                                utilz::replaceAllCopy(ENDING_RIGHT_TRIM, " ", "'"));
                         }
                     }
 
@@ -313,19 +314,19 @@ namespace word_stacker
             ++m_lineCount;
             ++m_unCLineCount;
 
-            boost::replace_all(line, "\r", "");
-            boost::replace_all(line, "\n", "");
+            utilz::replaceAll(line, "\r", "");
+            utilz::replaceAll(line, "\n", "");
 
             auto const ORIG_LINE_LENGTH{ line.length() };
 
-            boost::trim(line);
+            utilz::trimWhitespace(line);
 
             if (line.empty())
             {
                 continue;
             }
 
-            if (boost::starts_with(line, "//"))
+            if (utilz::startsWith(line, "//"))
             {
                 --m_unCLineCount;
                 continue;
@@ -342,7 +343,7 @@ namespace word_stacker
                 line = line.substr(0, COMMENT_POS);
             }
 
-            boost::replace_all(line, "\\\"", "");
+            utilz::replaceAll(line, "\\\"", "");
 
             // remove text in double quotes
             if (line.find('\"') != std::string::npos)
@@ -365,13 +366,13 @@ namespace word_stacker
             }
 
             changeInvalidCharactersToSpaces(line, CHARS_TO_KEEP);
-            boost::trim(line);
+            utilz::trimWhitespace(line);
 
             std::istringstream lineSS(line);
             std::string word;
             while (lineSS >> word)
             {
-                boost::trim(word);
+                utilz::trimWhitespace(word);
                 parseWord(supplies, word);
             }
         }

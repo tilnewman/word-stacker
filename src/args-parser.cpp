@@ -6,15 +6,12 @@
 #include "args-parser.hpp"
 #include "assert-or-throw.hpp"
 #include "report-maker.hpp"
+#include "strings.hpp"
 
 #include <SFML/Window/VideoMode.hpp>
 
-#include <boost/algorithm/algorithm.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#include <filesystem>
-
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 
 namespace word_stacker
@@ -31,10 +28,6 @@ namespace word_stacker
     const std::string ArgsParser::M_ARG_IGNORE_COMMON_SHORT{ "-w" };
     const std::string ArgsParser::M_ARG_IGNORE_FILE{ "--ignore=" };
     const std::string ArgsParser::M_ARG_IGNORE_FILE_SHORT{ "-i" };
-    const std::string ArgsParser::M_ARG_FONT_SIZE_MAX{ "--font-size-max=" };
-    const std::string ArgsParser::M_ARG_FONT_SIZE_MAX_SHORT{ "-x" };
-    const std::string ArgsParser::M_ARG_FONT_SIZE_MIN{ "--font-size-min=" };
-    const std::string ArgsParser::M_ARG_FONT_SIZE_MIN_SHORT{ "-n" };
     const std::string ArgsParser::M_ARG_HELP{ "--help" };
     const std::string ArgsParser::M_ARG_HELP_SHORT{ "-h" };
     const std::string ArgsParser::M_ARG_SKIP_DISPLAY{ "--skip-display=" };
@@ -77,7 +70,7 @@ namespace word_stacker
     {
         for (std::size_t i(1); i < ARGC; i++)
         {
-            auto const ARG{ boost::trim_copy(std::string(ARGV[i])) };
+            auto const ARG{ utilz::trimWhitespaceCopy(std::string(ARGV[i])) };
 
             if (ARG.empty())
             {
@@ -95,7 +88,7 @@ namespace word_stacker
                 exit(EXIT_SUCCESS);
             }
 
-            if (boost::starts_with(ARG, M_ARG_HELP))
+            if (utilz::startsWith(ARG, M_ARG_HELP))
             {
                 std::cout
                     << "  Parses all .txt or all .hpp/.cpp files and then displays word frequency "
@@ -173,21 +166,20 @@ namespace word_stacker
             }
 
             auto const IS_ARG_PARSE_AS_SHORT{ ARG == M_ARG_PARSE_AS_SHORT };
-            if (IS_ARG_PARSE_AS_SHORT || boost::starts_with(ARG, M_ARG_PARSE_AS))
+            if (IS_ARG_PARSE_AS_SHORT || utilz::startsWith(ARG, M_ARG_PARSE_AS))
             {
                 auto const NEXT_ARG{ ((i < ARGC) ? std::string(ARGV[++i]) : std::string("")) };
 
                 auto const VALUE{ (
                     (IS_ARG_PARSE_AS_SHORT)
-                        ? boost::to_lower_copy(NEXT_ARG)
-                        : boost::to_lower_copy(boost::replace_all_copy(ARG, M_ARG_PARSE_AS, ""))) };
+                        ? utilz::toLowerCopy(NEXT_ARG)
+                        : utilz::toLowerCopy(utilz::replaceAllCopy(ARG, M_ARG_PARSE_AS, ""))) };
 
                 for (int p(0); p < ParseType::Count; ++p)
                 {
                     auto const ENUM{ static_cast<ParseType::Enum>(p) };
 
-                    auto const ENUM_STR_LOWER{ boost::algorithm::to_lower_copy(
-                        ParseType::toString(ENUM)) };
+                    auto const ENUM_STR_LOWER{ utilz::toLowerCopy(ParseType::toString(ENUM)) };
 
                     if (ENUM_STR_LOWER == VALUE)
                     {
@@ -262,48 +254,6 @@ namespace word_stacker
                 {
                     reportMaker.argumentsStream()
                         << "Adding Flagged Words File \"" << FLAGGED_WORDS_PATH << "\"";
-                }
-
-                continue;
-            }
-
-            auto const IS_ARG_FONT_SIZE_MAX_SHORT{ ARG == M_ARG_FONT_SIZE_MAX_SHORT };
-            if (IS_ARG_FONT_SIZE_MAX_SHORT || boost::starts_with(ARG, M_ARG_FONT_SIZE_MAX))
-            {
-                auto const NEXT_ARG{ (
-                    (i < (ARGC - 1)) ? std::string(ARGV[++i]) : std::string("")) };
-
-                auto const VALUE{ (
-                    (IS_ARG_FONT_SIZE_MAX_SHORT)
-                        ? NEXT_ARG
-                        : boost::replace_all_copy(ARG, M_ARG_FONT_SIZE_MAX, "")) };
-
-                m_fontSizeMax = convertToUnsigned(VALUE);
-
-                if (m_willVerbose)
-                {
-                    reportMaker.argumentsStream() << "Setting Font Size Max to " << m_fontSizeMax;
-                }
-
-                continue;
-            }
-
-            auto const IS_ARG_FONT_SIZE_MIN_SHORT{ ARG == M_ARG_FONT_SIZE_MIN_SHORT };
-            if (IS_ARG_FONT_SIZE_MIN_SHORT || boost::starts_with(ARG, M_ARG_FONT_SIZE_MIN))
-            {
-                auto const NEXT_ARG{ (
-                    (i < (ARGC - 1)) ? std::string(ARGV[++i]) : std::string("")) };
-
-                auto const VALUE{ (
-                    (IS_ARG_FONT_SIZE_MIN_SHORT)
-                        ? NEXT_ARG
-                        : boost::replace_all_copy(ARG, M_ARG_FONT_SIZE_MAX, "")) };
-
-                m_fontSizeMin = convertToUnsigned(VALUE);
-
-                if (m_willVerbose)
-                {
-                    reportMaker.argumentsStream() << "Setting Font Size Min to " << m_fontSizeMin;
                 }
 
                 continue;
@@ -534,32 +484,6 @@ namespace word_stacker
         }
     }
 
-    unsigned ArgsParser::convertToUnsigned(const std::string & S) const
-    {
-        int x{ 0 };
-
-        try
-        {
-            x = boost::lexical_cast<int>(S);
-        }
-        catch (...)
-        {
-            x = -1;
-        }
-
-        M_LOG_AND_ASSERT_OR_THROW(
-            (x > 0),
-            "Invalid Argument:  Font size '" << S << "' is not a valid positive number [1, "
-                                             << M_FONT_SIZE_MAX << "].");
-
-        M_LOG_AND_ASSERT_OR_THROW(
-            (x <= M_FONT_SIZE_MAX),
-            "Invalid Argument:  Font size '" << S << "' is larger than the max of "
-                                             << M_FONT_SIZE_MAX << ".");
-
-        return static_cast<unsigned>(x);
-    }
-
     bool ArgsParser::parseCommandLineArgFlag(
         const std::string & ARG,
         bool & memberVar,
@@ -567,7 +491,7 @@ namespace word_stacker
         const std::string & CMD_FLAG) const
     {
         auto const IS_ARG_FLAG_VERSION{ ARG == CMD_FLAG };
-        if (IS_ARG_FLAG_VERSION || boost::starts_with(ARG, CMD_FULL))
+        if (IS_ARG_FLAG_VERSION || utilz::startsWith(ARG, CMD_FULL))
         {
             if (IS_ARG_FLAG_VERSION)
             {
@@ -575,10 +499,10 @@ namespace word_stacker
                 return true;
             }
 
-            auto value{ boost::replace_all_copy(ARG, CMD_FULL, "") };
+            auto value{ utilz::replaceAllCopy(ARG, CMD_FULL, "") };
 
-            boost::trim(value);
-            boost::to_lower(value);
+            utilz::trimWhitespace(value);
+            utilz::toLower(value);
 
             if (("yes" == value) || ("on" == value) || ("1" == value))
             {
@@ -605,12 +529,12 @@ namespace word_stacker
         const std::string ARG{ ARGV[i] };
 
         auto const IS_ARG_FLAG_VERSION{ ARG == CMD_FLAG };
-        if (IS_ARG_FLAG_VERSION || boost::starts_with(ARG, CMD_FULL))
+        if (IS_ARG_FLAG_VERSION || utilz::startsWith(ARG, CMD_FULL))
         {
             auto const NEXT_ARG{ ((i < (ARGC - 1)) ? std::string(ARGV[++i]) : std::string("")) };
 
             auto const VALUE{ (
-                (IS_ARG_FLAG_VERSION) ? NEXT_ARG : boost::replace_all_copy(ARG, CMD_FULL, "")) };
+                (IS_ARG_FLAG_VERSION) ? NEXT_ARG : utilz::replaceAllCopy(ARG, CMD_FULL, "")) };
 
             namespace fs = std::filesystem;
 
@@ -680,7 +604,7 @@ namespace word_stacker
         {
             auto const PATH_STR{ iter->path().string() };
 
-            if (boost::ends_with(PATH_STR, ".ttf") || boost::ends_with(PATH_STR, ".otf"))
+            if (utilz::endsWith(PATH_STR, ".ttf") || utilz::endsWith(PATH_STR, ".otf"))
             {
                 return PATH_STR;
             }

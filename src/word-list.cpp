@@ -4,6 +4,7 @@
 // word-list.cpp
 //
 #include "assert-or-throw.hpp"
+#include "strings.hpp"
 #include "word-list.hpp"
 
 #include <boost/algorithm/algorithm.hpp>
@@ -39,11 +40,11 @@ namespace word_stacker
                 std::string word;
                 while (file >> word)
                 {
-                    boost::trim(word);
-                    boost::replace_all(word, ",", "");
-                    boost::replace_all(word, "\n", "");
-                    boost::replace_all(word, "\r", "");
-                    boost::replace_all(word, "\t", "");
+                    utilz::trimWhitespace(word);
+                    utilz::replaceAll(word, ",", "");
+                    utilz::replaceAll(word, "\n", "");
+                    utilz::replaceAll(word, "\r", "");
+                    utilz::replaceAll(word, "\t", "");
                     boost::to_lower(word);
 
                     if (word.empty() == false)

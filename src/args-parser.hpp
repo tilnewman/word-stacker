@@ -63,8 +63,6 @@ namespace word_stacker
       private:
         void ParseVideoMode(ReportMaker &);
 
-        unsigned convertToUnsigned(const std::string &) const;
-
         bool parseCommandLineArgFlag(
             const std::string & ARG,
             bool & memberVar,
