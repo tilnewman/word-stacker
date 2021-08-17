@@ -256,15 +256,15 @@ namespace word_stacker
 
                     for (auto const & ENDING : APOSTR_WORD_ENDINGS)
                     {
-                        auto const REPLACEMENT{
-                            boost::replace_first_copy(
-                                boost::replace_last_copy(ENDING, " ", ""), " ", "'")
-                                .append(" ")
-                        };
+                        const std::string REPLACEMENT = [&]() {
+                            std::string rep = ENDING;
+                            rep[0] = '\'';
+                            return rep;
+                        }();
 
                         utilz::replaceAll(word, ENDING, REPLACEMENT);
 
-                        auto const ENDING_RIGHT_TRIM{ boost::trim_right_copy(ENDING) };
+                        const std::string ENDING_RIGHT_TRIM = ENDING.substr(0, (ENDING.size() - 2));
 
                         if (utilz::endsWith(word, ENDING_RIGHT_TRIM))
                         {
