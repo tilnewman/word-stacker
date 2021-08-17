@@ -485,6 +485,11 @@ namespace word_stacker
 
             sf::Text wordText(WORD, m_font, FONT_SIZE);
 
+            const sf::Vector2f LOCAL_POS{ wordText.getLocalBounds().left,
+                                          wordText.getLocalBounds().top };
+
+            wordText.setOrigin(LOCAL_POS);
+
             wordText.setColor(
                 ((COMMON_ORDER == 0) ? m_uniqueColors.colorAtRatio(FREQ_RATIO)
                                      : m_commonColors.colorAtRatio(COMMON_RATIO)));
@@ -498,7 +503,7 @@ namespace word_stacker
 
             // Adjust the vertPos down to compensate for SFML's inability
             // to actually know the height of text.
-            auto const VERT_SHIFT{ static_cast<float>(FONT_SIZE) / 2.0f };
+            auto const VERT_SHIFT{ static_cast<float>(FONT_SIZE) / 3.0f };
             vertPos += VERT_SHIFT;
 
             // make an sf::Text object for the count
@@ -510,12 +515,16 @@ namespace word_stacker
             }
 
             sf::Text countText(ss.str(), m_font, FONT_SIZE_COUNT);
+
+            const sf::Vector2f COUNT_LOCAL_POS{ countText.getLocalBounds().left,
+                                                countText.getLocalBounds().top };
+
+            countText.setOrigin(COUNT_LOCAL_POS);
+
             countText.setColor(sf::Color::White);
 
             // center the count text to the left of the wordText
-            auto const COUNT_TEXT_VERT_POS{ (vertPos + (wordText.getGlobalBounds().height * 0.5f)) -
-                                            (countText.getGlobalBounds().height * 0.5f) -
-                                            VERT_SHIFT };
+            auto const COUNT_TEXT_VERT_POS{ vertPos - VERT_SHIFT };
 
             countText.setPosition(posLeft, COUNT_TEXT_VERT_POS);
 
