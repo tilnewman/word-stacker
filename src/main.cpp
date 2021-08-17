@@ -10,7 +10,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <cstddef> //for std::size_t
 #include <cstdlib>
@@ -190,16 +190,16 @@ void saveScreenshot(sf::RenderWindow & renderWin)
     std::ostringstream ss;
     ss << FILENAME_BASE << FILENAME_EXT;
 
-    namespace bfs = boost::filesystem;
+    namespace fs = std::filesystem;
 
-    auto path{ bfs::system_complete(bfs::current_path() / bfs::path(ss.str())) };
+    auto path{ fs::canonical(fs::current_path() / fs::path(ss.str())) };
 
     unsigned long long filenameNumber{ 0 };
-    while (bfs::exists(path))
+    while (fs::exists(path))
     {
         ss.str("");
         ss << FILENAME_BASE << "-" << ++filenameNumber << FILENAME_EXT;
-        path = bfs::system_complete(bfs::current_path() / bfs::path(ss.str()));
+        path = fs::canonical(fs::current_path() / fs::path(ss.str()));
     }
 
     M_LOG_AND_ASSERT_OR_THROW(

@@ -10,7 +10,7 @@
 
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <algorithm>
 #include <bitset>
@@ -92,19 +92,20 @@ namespace word_stacker
 
     void FileParser::parseDirectoryOrFile(ParseSupplies & supplies, const std::string & PATH_STR)
     {
-        namespace bfs = boost::filesystem;
-        auto const PATH{ bfs::system_complete(bfs::path(PATH_STR)) };
+        namespace fs = std::filesystem;
 
-        if (bfs::is_directory(PATH))
+        auto const PATH{ fs::canonical(fs::path(PATH_STR)) };
+
+        if (fs::is_directory(PATH))
         {
             ++m_dirCount;
-            bfs::directory_iterator end_iter;
-            for (bfs::directory_iterator iter(PATH); iter != end_iter; ++iter)
+            fs::directory_iterator end_iter;
+            for (fs::directory_iterator iter(PATH); iter != end_iter; ++iter)
             {
                 parseDirectoryOrFile(supplies, iter->path().string());
             }
         }
-        else if (bfs::is_regular_file(PATH))
+        else if (fs::is_regular_file(PATH))
         {
             if (doesFilenameMatchParseType(supplies, PATH.string()))
             {

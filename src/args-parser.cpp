@@ -11,8 +11,8 @@
 
 #include <boost/algorithm/algorithm.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <filesystem>
 
 #include <cstdlib>
 #include <iostream>
@@ -401,18 +401,16 @@ namespace word_stacker
 
             // try and interpret the ARG as a path to be parsed
             {
-                namespace bfs = boost::filesystem;
+                const std::filesystem::path PATH{ std::filesystem::canonical(ARG) };
 
-                const bfs::path PATH{ bfs::canonical(bfs::system_complete(ARG)) };
-
-                m_isPathADireectory = bfs::is_directory(PATH);
+                m_isPathADireectory = std::filesystem::is_directory(PATH);
 
                 M_LOG_AND_ASSERT_OR_THROW(
-                    (bfs::exists(PATH)),
+                    (std::filesystem::exists(PATH)),
                     "Invalid argument:  \""
                         << ARG << "\" could not be interpreted as a path that exists.");
 
-                auto const IS_REGULAR_FILE{ bfs::is_regular_file(PATH) };
+                auto const IS_REGULAR_FILE{ std::filesystem::is_regular_file(PATH) };
 
                 M_LOG_AND_ASSERT_OR_THROW(
                     (m_isPathADireectory != IS_REGULAR_FILE),
@@ -447,11 +445,11 @@ namespace word_stacker
             }
         }
 
-        namespace bfs = boost::filesystem;
+        namespace fs = std::filesystem;
 
         if (m_paths.empty())
         {
-            auto const CURRENT_DIR{ bfs::current_path().string() };
+            auto const CURRENT_DIR{ fs::current_path().string() };
 
             m_paths.push_back(CURRENT_DIR);
 
@@ -470,9 +468,9 @@ namespace word_stacker
 
         if (m_commonWordsPath.empty() && (m_parseType == ParseType::Text))
         {
-            auto COMMON_FILE_DEFAULT_PATH{ bfs::system_complete("./common-words-ordered.txt") };
-            if ((bfs::exists(COMMON_FILE_DEFAULT_PATH)) &&
-                (bfs::is_regular_file(COMMON_FILE_DEFAULT_PATH)))
+            auto COMMON_FILE_DEFAULT_PATH{ fs::canonical("./common-words-ordered.txt") };
+            if ((fs::exists(COMMON_FILE_DEFAULT_PATH)) &&
+                (fs::is_regular_file(COMMON_FILE_DEFAULT_PATH)))
             {
                 m_commonWordsPath = COMMON_FILE_DEFAULT_PATH.string();
             }
@@ -488,28 +486,28 @@ namespace word_stacker
             "Missing required argument: A font must be specified with '"
                 << M_ARG_FONT_FILE_SHORT << "' or '" << M_ARG_FONT_FILE << "FILE'.");
 
-        const bfs::path FONT_PATH{ bfs::system_complete(bfs::path(m_fontPath)) };
+        const fs::path FONT_PATH{ fs::canonical(fs::path(m_fontPath)) };
 
         M_LOG_AND_ASSERT_OR_THROW(
-            (bfs::exists(FONT_PATH)),
+            (fs::exists(FONT_PATH)),
             "Invalid argument:  Font " << M_ARG_FONT_FILE << " does not exist'.");
 
         M_LOG_AND_ASSERT_OR_THROW(
-            (bfs::is_regular_file(FONT_PATH)),
+            (fs::is_regular_file(FONT_PATH)),
             "Invalid argument:  Font at " << FONT_PATH.string() << " is not a regular file.");
 
         if (m_willIgnoreCommonWords)
         {
-            const bfs::path COMMON_WORDS_PATH{ bfs::system_complete(bfs::path(m_commonWordsPath)) };
+            const fs::path COMMON_WORDS_PATH{ fs::canonical(fs::path(m_commonWordsPath)) };
 
             M_LOG_AND_ASSERT_OR_THROW(
-                (bfs::exists(COMMON_WORDS_PATH)),
+                (fs::exists(COMMON_WORDS_PATH)),
                 "Ignore Common words is specified, but the "
                     << M_ARG_COMMON_WORD_FILE << " file at '" << COMMON_WORDS_PATH.string()
                     << "' does not exist.");
 
             M_LOG_AND_ASSERT_OR_THROW(
-                (bfs::is_regular_file(COMMON_WORDS_PATH)),
+                (fs::is_regular_file(COMMON_WORDS_PATH)),
                 "Ignore Common words is specified, but the "
                     << M_ARG_COMMON_WORD_FILE << " file at '" << COMMON_WORDS_PATH.string()
                     << "' is not a regular file.");
@@ -614,16 +612,16 @@ namespace word_stacker
             auto const VALUE{ (
                 (IS_ARG_FLAG_VERSION) ? NEXT_ARG : boost::replace_all_copy(ARG, CMD_FULL, "")) };
 
-            namespace bfs = boost::filesystem;
+            namespace fs = std::filesystem;
 
-            const bfs::path PATH{ bfs::canonical(bfs::system_complete(VALUE)) };
+            const fs::path PATH{ fs::canonical(VALUE) };
 
             M_LOG_AND_ASSERT_OR_THROW(
-                (bfs::exists(PATH)),
+                (fs::exists(PATH)),
                 "Invalid argument:  " << ARG << " of \"" << VALUE << "\" does not exist.");
 
             M_LOG_AND_ASSERT_OR_THROW(
-                (bfs::is_regular_file(PATH)),
+                (fs::is_regular_file(PATH)),
                 "Invalid argument:  " << ARG << " of \"" << VALUE << "\" is not a regular file.");
 
             return PATH.string();
@@ -640,31 +638,31 @@ namespace word_stacker
             return LOCAL_FONT_PATH;
         }
 
-        namespace bfs = boost::filesystem;
+        namespace fs = std::filesystem;
 
-        auto WINDOWS_ARIAL_PATH_LOWERCASE{ bfs::system_complete("C:\\Windows\\Fonts\\arial.ttf") };
-        if (bfs::exists(WINDOWS_ARIAL_PATH_LOWERCASE))
+        auto WINDOWS_ARIAL_PATH_LOWERCASE{ fs::canonical("C:\\Windows\\Fonts\\arial.ttf") };
+        if (fs::exists(WINDOWS_ARIAL_PATH_LOWERCASE))
         {
             return WINDOWS_ARIAL_PATH_LOWERCASE.string();
         }
 
-        auto WINDOWS_ARIAL_PATH_UPPERCASE{ bfs::system_complete("C:\\Windows\\Fonts\\ARIAL.TTF") };
-        if (bfs::exists(WINDOWS_ARIAL_PATH_UPPERCASE))
+        auto WINDOWS_ARIAL_PATH_UPPERCASE{ fs::canonical("C:\\Windows\\Fonts\\ARIAL.TTF") };
+        if (fs::exists(WINDOWS_ARIAL_PATH_UPPERCASE))
         {
             return WINDOWS_ARIAL_PATH_UPPERCASE.string();
         }
 
-        auto const HOME_PATH{ bfs::system_complete(std::getenv("HOME")) };
-        if (bfs::exists(HOME_PATH) && bfs::is_directory(HOME_PATH))
+        auto const HOME_PATH{ fs::canonical(std::getenv("HOME")) };
+        if (fs::exists(HOME_PATH) && fs::is_directory(HOME_PATH))
         {
-            auto MAC_ARIAL_PATH_LOWERCASE{ HOME_PATH / bfs::path("Library/Fonts/arial.ttf") };
-            if (bfs::exists(MAC_ARIAL_PATH_LOWERCASE))
+            auto MAC_ARIAL_PATH_LOWERCASE{ HOME_PATH / fs::path("Library/Fonts/arial.ttf") };
+            if (fs::exists(MAC_ARIAL_PATH_LOWERCASE))
             {
                 return MAC_ARIAL_PATH_LOWERCASE.string();
             }
 
-            auto MAC_ARIAL_PATH_UPPERCASE{ HOME_PATH / bfs::path("Library/Fonts/ARIAL.TTF") };
-            if (bfs::exists(MAC_ARIAL_PATH_UPPERCASE))
+            auto MAC_ARIAL_PATH_UPPERCASE{ HOME_PATH / fs::path("Library/Fonts/ARIAL.TTF") };
+            if (fs::exists(MAC_ARIAL_PATH_UPPERCASE))
             {
                 return MAC_ARIAL_PATH_UPPERCASE.string();
             }
@@ -675,10 +673,10 @@ namespace word_stacker
 
     const std::string ArgsParser::findLocalFont() const
     {
-        namespace bfs = boost::filesystem;
+        namespace fs = std::filesystem;
 
-        bfs::directory_iterator end_iter;
-        for (bfs::directory_iterator iter(bfs::system_complete(".")); iter != end_iter; ++iter)
+        fs::directory_iterator end_iter;
+        for (fs::directory_iterator iter(fs::canonical(".")); iter != end_iter; ++iter)
         {
             auto const PATH_STR{ iter->path().string() };
 

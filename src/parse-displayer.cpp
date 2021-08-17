@@ -7,7 +7,7 @@
 #include "parse-displayer.hpp"
 #include "word-count-stats.hpp"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <algorithm>
 #include <sstream>
@@ -416,18 +416,18 @@ namespace word_stacker
 
     void ParseDisplayer::loadFont(const ArgsParser & ARGS)
     {
-        namespace bfs = boost::filesystem;
+        namespace fs = std::filesystem;
 
-        auto const PATH{ bfs::system_complete(ARGS.fontPath()) };
+        auto const PATH{ fs::canonical(ARGS.fontPath()) };
         auto const PATH_STR{ PATH.string() };
 
         M_LOG_AND_ASSERT_OR_THROW(
-            (bfs::exists(PATH)),
+            (fs::exists(PATH)),
             "ParseDisplayer::LoadFont(\"" << PATH_STR
                                           << "\") failed because that file does not exist.");
 
         M_LOG_AND_ASSERT_OR_THROW(
-            (bfs::is_regular_file(PATH)),
+            (fs::is_regular_file(PATH)),
             "ParseDisplayer::LoadFont(\"" << PATH_STR
                                           << "\") failed because that is not a regular file.");
 
