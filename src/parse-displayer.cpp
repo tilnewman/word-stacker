@@ -465,7 +465,7 @@ namespace word_stacker
             auto const FREQ{ WORDS[wordsIndex].count() };
 
             auto const FREQ_RATIO{ (
-                ((WORDS.size() == 1) || ((FREQ - FREQ_MIN) == 0))
+                ((WORDS.size() == 1) || ((WORDS[0].count() - FREQ_MIN) == 0))
                     ? 1.0f
                     : (static_cast<float>(FREQ - FREQ_MIN) /
                        static_cast<float>(HIGHEST_WORD_FREQ_F - static_cast<float>(FREQ_MIN)))) };
