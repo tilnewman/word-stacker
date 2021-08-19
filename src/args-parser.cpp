@@ -52,7 +52,7 @@ namespace word_stacker
         , m_commonWordsPath("")
         , m_willIgnoreCommonWords(false)
         , m_ignoreWordsPaths()
-        , m_isPathADireectory("")
+        , m_isPathADireectory(false)
         , m_fontSizeMin(30)
         , m_fontSizeMax(400)
         , m_willSkipDisplay(false)
