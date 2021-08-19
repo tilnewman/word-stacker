@@ -1,89 +1,129 @@
-cmake_minimum_required(VERSION 3.5)
-project("word-stacker")
+cmake_minimum_required(VERSION 3.8)
+project("word-stacker" VERSION 0.5.0 LANGUAGES CXX)
 
-message(STATUS "System Detected: ${CMAKE_SYSTEM}")
-
-set(CUSTOM_BUILD_FLAGS "")
-set(CUSTOM_LINK_FLAGS "")
-
-option(VALGRIND_BUILD "Build flags customized for Valgrind" OFF)
-
-if(MSVC)
-    set(SFML_PATH "C:/Program Files/SFML-2.4.1")
-    message(STATUS "${PROJECT_NAME} will look for SFML here: \"" ${SFML_PATH} "\"")
-
-    file (READ ../build-flags/build-flags-msvc.txt CUSTOM_BUILD_FLAGS)
-
-    set(BOOST_INCLUDEDIR "C:/local/boost_1_61_0")
-    set(BOOST_LIBRARYDIR "C:/local/boost_1_61_0/lib32-msvc-14.0")
-    set(BOOST_ROOT "C:/local/boost_1_61_0/boost")
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-
-    set(CUSTOM_LINK_FLAGS "-pthread")
-
-    if(VALGRIND_BUILD)
-        file (READ ../build-flags/build-flags-gnu-valgrind.txt CUSTOM_BUILD_FLAGS)
-        message("Compiler flags customized for Valgrind.")
-    else()
-        file (READ ../build-flags/build-flags-gnu.txt CUSTOM_BUILD_FLAGS)
-    endif()
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
-    file (READ ../build-flags/build-flags-clang.txt CUSTOM_BUILD_FLAGS)
-endif()
-
-add_definitions( ${CUSTOM_BUILD_FLAGS} )
-SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CUSTOM_LINK_FLAGS}" )
-
-message(STATUS "Compiler Detected: ${CMAKE_CXX_COMPILER_ID} with compile flags: ${CUSTOM_BUILD_FLAGS} and linker flags: ${CMAKE_EXE_LINKER_FLAGS}")
-
-set(CUSTOM_PROJECT_BOOST_VER "1.58.0")
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON) #default is ON, but the consequences...
-set(Boost_ADDITIONAL_VERSIONS ${Boost_ADDITIONAL_VERSIONS} ${CUSTOM_PROJECT_BOOST_VER})
-FIND_PACKAGE(Boost ${CUSTOM_PROJECT_BOOST_VER} COMPONENTS system thread filesystem random serialization)
-message(STATUS "Using boost version: " ${Boost_VERSION})
-
-include_directories(${include_directories} . ${Boost_INCLUDE_DIRS})
-link_directories(${link_directories} ${Boost_LIBRARY_DIRS})
-
-
-set(TARGET_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-if(WIN32)
-    set(TARGET_BINARY_DIR ${TARGET_BINARY_DIR}/Release)
-
-    set(SFML_BIN_DIR ${SFML_PATH}/bin)
-    set(SFML_INCLUDE_DIR ${SFML_PATH}/include)
-    set(SFML_LIBRARY_DIRS ${SFML_PATH}/lib)
-    set(SFML_LIBRARIES sfml-system.lib sfml-window.lib sfml-graphics.lib sfml-audio.lib)
-    set(Boost_COMPILER -vc90)
-    include_directories(${include_directories} . ${SFML_INCLUDE_DIR})
-
-    file(GLOB files ${SFML_BIN_DIR}/*)
-    foreach(file ${files})
-        file(COPY ${file} DESTINATION ${TARGET_BINARY_DIR})
-    endforeach()
-else()
-    set(SFML_INCLUDE_DIR "-I/usr/include/SFML")
-    set(SFML_LIBRARY_DIRS "/usr/lib")
-    set(SFML_LIBRARIES sfml-system sfml-window sfml-graphics sfml-audio)
-endif()
-
-include_directories(${include_directories}
-                    ${SFML_INCLUDE_DIR})
-
-link_directories(   ${link_directories}
-                    ${SFML_LIBRARY_DIRS} )
 
 file(GLOB source_files *.?pp)
 add_executable(${PROJECT_NAME} ${source_files})
 
-target_link_libraries(  ${PROJECT_NAME}
-                        ${Boost_LIBRARIES}
-                        ${SFML_LIBRARIES})
+
+find_package(SFML 2.5 COMPONENTS window graphics audio REQUIRED)
+target_link_libraries(${PROJECT_NAME} sfml-system sfml-window sfml-graphics sfml-audio)
+
+find_package(Boost COMPONENTS system REQUIRED)
+target_link_libraries(${PROJECT_NAME} Boost::system)
+
+#compiler/linker options
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+
+    target_compile_options(
+        ${PROJECT_NAME}
+        PUBLIC
+        /std:c++latest
+        /permissive-
+        /fp:fast
+        -DWIN32_LEAN_AND_MEAN
+        /MP
+        /W4
+        /wd26812
+        /wd26451
+        /w14254
+        /w14263
+        /w14265
+        /w14287
+        /w14296
+        /w14311
+        /w14545
+        /w14546
+        /w14547
+        /w14549
+        /w14555
+        /w14619
+        /w14640
+        /w14826
+        /w14905
+        /w14906
+        /w14928
+        /we4289)
+
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+
+    target_compile_options(
+        ${PROJECT_NAME}
+        PUBLIC
+        -DNDEBUG
+        -lstdc++
+        -O3
+        -std=c++17
+        -Weverything
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-covered-switch-default
+        -Wno-deprecated
+        -Wno-disabled-macro-expansion
+        -Wno-error
+        -Wno-exit-time-destructors
+        -Wno-global-constructors
+        -Wno-inconsistent-missing-destructor-override
+        -Wno-newline-eof
+        -Wno-padded
+        -Wno-unused-command-line-argument
+        -Wno-weak-vtables
+        -Wno-poison-system-directories
+        -Wno-switch-enum
+        -Wno-documentation-unknown-command
+        -Wno-ctad-maybe-unsupported
+        -Wno-unused-function
+        -Woverloaded-virtual
+        -Wcast-align
+        -Wformat=2)
 
 
+    option(ASAN "Using Clang's Address Sanitizer" ON)
+
+    if(ASAN)
+	message(" *** Using Clang's Address Sanitizer *** (-DASAN=OFF will disable it)")
+        target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=address -fno-omit-frame-pointer)
+        target_link_libraries(${PROJECT_NAME} -fsanitize=address -fno-omit-frame-pointer)
+    endif()
+
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+
+    target_compile_options(
+        ${PROJECT_NAME}
+        PUBLIC
+        -std=c++17
+        -O3
+        -DNDEBUG
+        -lstdc++
+        -ffast-math
+        -pedantic
+        -Wall
+        -Wconversion
+        -Weffc++
+        -Wextra
+        -Wfatal-errors
+        -Wfloat-equal
+        -Wshadow
+        -Wsign-conversion
+        -Wstrict-null-sentinel
+        -Wswitch-default
+        -Wno-switch-enum
+        -Wundef
+        -Wunreachable-code
+        -Wunused-parameter
+        -Wcast-align
+        -Wmisleading-indentation
+        -Wduplicated-cond
+        -Wduplicated-branches
+        -Wlogical-op
+        -Wnull-dereference
+        -Wuseless-cast
+        -Wformat=2)
+
+else()
+
+    message(FATAL_ERROR " Unknwon Compiler: ${CMAKE_CXX_COMPILER_ID}")
+
+endif()
