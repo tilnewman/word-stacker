@@ -217,9 +217,7 @@ namespace word_stacker
     {
         ++m_fileCount;
 
-        const std::string CHARS_TO_KEEP{
-            "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDSFGHJKLZXCVBNM-'"
-        };
+        const std::string CHARS_TO_KEEP{ "abcedfghijklmnopqrstuvwxyz'-" };
 
         std::string line;
         while (std::getline(file, line))
@@ -232,70 +230,33 @@ namespace word_stacker
 
             m_lengthCountMap[line.length()]++;
 
+            // this appears in lots of poems
+            utilz::replaceAll(line, "--", "-");
+
+            // use boost here because it handles multi-byte characters so well
+            boost::to_lower(line);
+
+            changeInvalidCharactersToSpaces(line, CHARS_TO_KEEP);
+
+            utilz::trimWhitespace(line);
+
             std::istringstream iss(line);
             std::string word;
             while (iss >> word)
             {
-                boost::to_lower(word);
-                utilz::trimWhitespace(word);
+                utilz::trimIfNot(
+                    word, [](const char CH) { return !((CH == '\'') || (CH == '-')); });
 
-                changeInvalidCharactersToSpaces(word, CHARS_TO_KEEP);
-                utilz::trimWhitespace(word);
-
-                // Note that these two replacements, when in this order,
-                // handles the case of four spaces appearing together.
-                utilz::replaceAll(word, "   ", " ");
-                utilz::replaceAll(word, "  ", " ");
-
-                // handle words that had unicode apostrophes or ellipsis
-                if (word.find(' ') != std::string::npos)
+                // remove trailing 's
+                if (word.size() >= 4)
                 {
-                    // handle apostrophes
-                    const StrVec_t APOSTR_WORD_ENDINGS = { " t ",  " s ",  " d ", " m ",
-                                                           " ll ", " ve ", " re " };
-
-                    for (auto const & ENDING : APOSTR_WORD_ENDINGS)
+                    if ((word[word.size() - 2] == '\'') && (word[word.size() - 1] == 's'))
                     {
-                        const std::string REPLACEMENT = [&]() {
-                            std::string rep = ENDING;
-                            rep[0] = '\'';
-                            return rep;
-                        }();
-
-                        utilz::replaceAll(word, ENDING, REPLACEMENT);
-
-                        const std::string ENDING_RIGHT_TRIM = ENDING.substr(0, (ENDING.size() - 2));
-
-                        if (utilz::endsWith(word, ENDING_RIGHT_TRIM))
-                        {
-                            utilz::replaceAll(
-                                word,
-                                ENDING_RIGHT_TRIM,
-                                utilz::replaceAllCopy(ENDING_RIGHT_TRIM, " ", "'"));
-                        }
-                    }
-
-                    // handle ellipsis
-                    if (word.find(' ') != std::string::npos)
-                    {
-                        std::istringstream issSubWords(word);
-                        std::string subWord{ "" };
-                        while (issSubWords >> subWord)
-                        {
-                            if (("-" != subWord) && ("'" != subWord))
-                            {
-                                parseWord(supplies, subWord);
-                            }
-                        }
-
-                        continue;
+                        word = word.substr(0, word.size() - 2);
                     }
                 }
 
-                if (("-" != word) && ("'" != word))
-                {
-                    parseWord(supplies, word);
-                }
+                parseWord(supplies, word);
             }
         }
     }
@@ -389,6 +350,11 @@ namespace word_stacker
 
         if (LENGTH == 1)
         {
+            if ((WORD == "-") || (WORD == "'"))
+            {
+                return;
+            }
+
             ++m_singleCount;
         }
 
@@ -449,13 +415,13 @@ namespace word_stacker
     }
 
     void FileParser::changeInvalidCharactersToSpaces(
-        std::string & s, const std::string & CHARS_TO_KEEP) const
+        std::string & str, const std::string & CHARS_TO_KEEP) const
     {
-        for (auto iter{ s.begin() }; iter != s.end(); ++iter)
+        for (char & ch : str)
         {
-            if (CHARS_TO_KEEP.find(*iter) == std::string::npos)
+            if (CHARS_TO_KEEP.find(ch) == std::string::npos)
             {
-                *iter = ' ';
+                ch = ' ';
             }
         }
     }
