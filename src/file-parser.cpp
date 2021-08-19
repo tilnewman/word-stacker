@@ -70,7 +70,7 @@ namespace word_stacker
         m_wordCounts.reserve(parseSupplies.m_wordCountMap.size());
         for (auto const & PAIR : parseSupplies.m_wordCountMap)
         {
-            m_wordCounts.push_back(WordCount(PAIR.first, PAIR.second));
+            m_wordCounts.emplace_back(PAIR.first, PAIR.second);
         }
 
         parseSupplies.m_wordCountMap.clear();
