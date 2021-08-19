@@ -298,13 +298,13 @@ namespace word_stacker
 
         wordText.setOrigin(LOCAL_POS);
 
-        wordText.setColor(
+        wordText.setFillColor(
             ((COMMON_ORDER == 0) ? m_uniqueColors.colorAtRatio(FREQ_RATIO)
                                  : m_commonColors.colorAtRatio(COMMON_RATIO)));
 
         if (FLAGGED_WORDS.contains(WORD))
         {
-            wordText.setColor(sf::Color::Red);
+            wordText.setFillColor(sf::Color::Red);
         }
 
         wordText.setPosition(0.0f, 0.0f);
@@ -318,7 +318,7 @@ namespace word_stacker
         }
 
         sf::Text countText(ss.str(), m_font, FONT_SIZE_COUNT);
-        countText.setColor(sf::Color::White);
+        countText.setFillColor(sf::Color::White);
 
         // extra vertical space to compensate for sfml's inability to know actual font height
         auto const EXTRA_HEIGHT{ static_cast<float>(FONT_SIZE) / 2.0f };
@@ -457,7 +457,7 @@ namespace word_stacker
 
         auto const WIDTH{ ARGS.screenWidthF() };
         auto const HEIGHT{ ARGS.screenHeightF() };
-        auto const COUNT_TO_WORD_PAD{ 20.0f };
+        auto const PAD{ 20.0f };
         auto const FREQ_MIN{ WORDS[WORDS.size() - 1].count() };
         auto const COMMON_WORDS_COUNT_F{ static_cast<float>(COMMON_WORDS.count()) };
         auto const HIGHEST_WORD_FREQ_F{ static_cast<float>(WORDS[0].count()) };
@@ -495,21 +495,16 @@ namespace word_stacker
 
             wordText.setOrigin(LOCAL_POS);
 
-            wordText.setColor(
+            wordText.setFillColor(
                 ((COMMON_ORDER == 0) ? m_uniqueColors.colorAtRatio(FREQ_RATIO)
                                      : m_commonColors.colorAtRatio(COMMON_RATIO)));
 
             if (FLAGGED_WORDS.contains(WORD))
             {
-                wordText.setColor(sf::Color::Red);
+                wordText.setFillColor(sf::Color::Red);
             }
 
             wordText.setPosition(posLeft, vertPos);
-
-            // Adjust the vertPos down to compensate for SFML's inability
-            // to actually know the height of text.
-            auto const VERT_SHIFT{ static_cast<float>(FONT_SIZE) / 3.0f };
-            vertPos += VERT_SHIFT;
 
             // make an sf::Text object for the count
             std::ostringstream ss;
@@ -526,15 +521,12 @@ namespace word_stacker
 
             countText.setOrigin(COUNT_LOCAL_POS);
 
-            countText.setColor(sf::Color::White);
+            countText.setFillColor(sf::Color::White);
 
-            // center the count text to the left of the wordText
-            auto const COUNT_TEXT_VERT_POS{ vertPos - VERT_SHIFT };
-
-            countText.setPosition(posLeft, COUNT_TEXT_VERT_POS);
+            countText.setPosition(posLeft, vertPos);
 
             // move the word over so it doesn't overlap with the count
-            wordText.move(countText.getGlobalBounds().width + COUNT_TO_WORD_PAD, 0.0f);
+            wordText.move(countText.getGlobalBounds().width + PAD, 0.0f);
 
             auto const HORIZ_EXTENT{ wordText.getGlobalBounds().left +
                                      wordText.getGlobalBounds().width };
@@ -549,10 +541,10 @@ namespace word_stacker
                 break;
             }
 
-            auto const VERT_SPACE_CONSUMED{ std::max(
-                countText.getGlobalBounds().height, wordText.getGlobalBounds().height) };
+            vertPos =
+                (wordText.getGlobalBounds().top + wordText.getGlobalBounds().height +
+                 (wordText.getGlobalBounds().height * 0.1f) + PAD);
 
-            vertPos += VERT_SPACE_CONSUMED;
             if (vertPos > HEIGHT)
             {
                 break;
@@ -658,7 +650,7 @@ namespace word_stacker
 
         // top label
         sf::Text topLabelText(lineCountMaxSS.str(), m_font, LABEL_FONT_SIZE);
-        topLabelText.setColor(m_uniqueColors.colorAtRatio(1.0f));
+        topLabelText.setFillColor(m_uniqueColors.colorAtRatio(1.0f));
         topLabelText.setPosition(
             HORIZONTAL_SPACER, VERTICAL_SPACER - topLabelText.getGlobalBounds().height);
 
@@ -673,7 +665,7 @@ namespace word_stacker
 
         // bottom label
         sf::Text bottomLabelText(lineCountMinSS.str(), m_font, LABEL_FONT_SIZE);
-        bottomLabelText.setColor(m_uniqueColors.colorAtRatio(1.0f));
+        bottomLabelText.setFillColor(m_uniqueColors.colorAtRatio(1.0f));
         bottomLabelText.setPosition(
             (GRAPH_LEFT - bottomLabelText.getGlobalBounds().width) - PAD,
             (GRAPH_BOTTOM - bottomLabelText.getGlobalBounds().height) - (PAD * 2.0f));
@@ -682,13 +674,13 @@ namespace word_stacker
 
         // left label
         sf::Text leftLabelText(lineLengthMinSS.str(), m_font, LABEL_FONT_SIZE);
-        leftLabelText.setColor(m_uniqueColors.colorAtRatio(1.0f));
+        leftLabelText.setFillColor(m_uniqueColors.colorAtRatio(1.0f));
         leftLabelText.setPosition(GRAPH_LEFT, GRAPH_BOTTOM);
         target.draw(leftLabelText, states);
 
         // label for column 80
         sf::Text label80Text("80", m_font, LABEL_FONT_SIZE);
-        label80Text.setColor(m_uniqueColors.colorAtRatio(1.0f));
+        label80Text.setFillColor(m_uniqueColors.colorAtRatio(1.0f));
 
         auto const GRAPH_DISTANCE_TO_80{
             (80.0f / static_cast<float>(lineLengthMax - lineLengthMin)) * GRAPH_WIDTH
@@ -702,7 +694,7 @@ namespace word_stacker
 
         // label for column 100
         sf::Text label100Text("100", m_font, LABEL_FONT_SIZE);
-        label100Text.setColor(m_uniqueColors.colorAtRatio(1.0f));
+        label100Text.setFillColor(m_uniqueColors.colorAtRatio(1.0f));
 
         auto const GRAPH_DISTANCE_TO_100{
             (100.0f / static_cast<float>(lineLengthMax - lineLengthMin)) * GRAPH_WIDTH
@@ -716,7 +708,7 @@ namespace word_stacker
 
         // right label
         sf::Text rightLabelText(lineLengthMaxSS.str(), m_font, LABEL_FONT_SIZE);
-        rightLabelText.setColor(m_uniqueColors.colorAtRatio(1.0f));
+        rightLabelText.setFillColor(m_uniqueColors.colorAtRatio(1.0f));
         rightLabelText.setPosition(
             GRAPH_RIGHT - rightLabelText.getGlobalBounds().width, GRAPH_BOTTOM);
 
