@@ -41,12 +41,14 @@ namespace word_stacker
     const int ArgsParser::M_FONT_SIZE_MAX{ 999 };
 
     ArgsParser::ArgsParser(
-        ReportMaker & reportMaker, const std::size_t ARGC, const char * const ARGV[])
+        const sf::VideoMode & VIDEO_MODE,
+        ReportMaker & reportMaker,
+        const std::size_t ARGC,
+        const char * const ARGV[])
         : m_parseType(ParseType::Count)
-        , m_screenWidth(-1.0f)
-        , // any negative will work here and below
-        m_screenHeight(-1.0f)
-        , m_bitsPerPixel(0)
+        , m_screenWidth(static_cast<float>(VIDEO_MODE.width))
+        , m_screenHeight(static_cast<float>(VIDEO_MODE.height))
+        , m_bitsPerPixel(VIDEO_MODE.bitsPerPixel)
         , m_paths()
         , m_fontPath("")
         , m_commonWordsPath("")
@@ -60,7 +62,6 @@ namespace word_stacker
         , m_flaggedWordsPaths()
         , m_willParseHTML(false)
     {
-        ParseVideoMode(reportMaker);
         ParseCommandLineArguments(reportMaker, ARGC, ARGV);
         EnsureValidStartingValues(reportMaker);
     }
@@ -90,58 +91,38 @@ namespace word_stacker
 
             if (utilz::startsWith(ARG, M_ARG_HELP))
             {
+                // clang-format off
                 std::cout
-                    << "  Parses all .txt or all .hpp/.cpp files and then displays word frequency "
-                    << "information in columns or in a jumble.\n"
+                    << "  Parses all .txt or all .hpp/.cpp files and then displays word frequency information in columns or in a jumble.\n"
                     << '\n'
-                    << "  Usage:  word_stacker [-wsvhm] "
-                    << "[-t Text/Code] <-f font> [-c common words file] [-i ignored words file] "
-                    << "[-n font size min] [-x font size max] <FILE or DIR to parse ...>\n"
+                    << "  Usage:  word_stacker [-wsvhm] [-t Text/Code] <-f font> [-c common words file] [-i ignored words file] [-n font size min] [-x font size max] <FILE or DIR to parse ...>\n"
                     << '\n'
                     << "Options:\n"
-                    << "  -w, --will-ignore-common=yes/no      prevents the display of words in "
-                       "the common words file\n"
-                    << "  -s, --skip-display=yes/no            prevents the graphical display, "
-                       "implies -d\n"
-                    << "  -v, --verbose=yes/no                 echos detailed parsing and display "
-                       "information\n"
-                    << "  -t, --type=Text/Code                 type of parsing, 'Text' for all "
-                       ".txt, or 'Code' for all source files, defaults to 'Text'\n"
+                    << "  -w, --will-ignore-common=yes/no      prevents the display of words in the common words file\n"
+                    << "  -s, --skip-display=yes/no            prevents the graphical display, implies -d\n"
+                    << "  -v, --verbose=yes/no                 echos detailed parsing and display information\n"
+                    << "  -t, --type=Text/Code                 type of parsing, 'Text' for all .txt, or 'Code' for all source files, defaults to 'Text'\n"
                     << "  -f, --font=FILE                      font to use\n"
-                    << "  -n, --font-size-min=[1,999]          REQUIRED, smallest font size, must "
-                       "be <= max, defaults to 30\n"
-                    << "  -x, --font-size-max=[1,999]          largest font size, must be >= min, "
-                       "defaults to 400\n"
-                    << "  -c, --common=FILE                    file containing common words in "
-                       "order\n"
-                    << "  -i, --ignore=FILE                    file containing words to be "
-                       "ignored\n"
-                    << "  -m, --parse-html=yes/no              when parsing code also parse html, "
-                       "defaults to no\n"
+                    << "  -n, --font-size-min=[1,999]          REQUIRED, smallest font size, must be <= max, defaults to 30\n"
+                    << "  -x, --font-size-max=[1,999]          largest font size, must be >= min, defaults to 400\n"
+                    << "  -c, --common=FILE                    file containing common words in order\n"
+                    << "  -i, --ignore=FILE                    file containing words to be ignored\n"
+                    << "  -m, --parse-html=yes/no              when parsing code also parse html, defaults to no\n"
                     << "  -h, --help                           echos this help message\n"
                     << '\n'
-                    << "    Similar to a word cloud, the size and color of each word is "
-                       "proportional\n"
-                    << "    to the frequency, or number of times the word was encountered.  The "
-                       "higher\n"
-                    << "    the frequency, the larger the font size and the closer to white the "
-                       "word \n"
+                    << "    Similar to a word cloud, the size and color of each word is proportional\n"
+                    << "    to the frequency, or number of times the word was encountered.  The higher\n"
+                    << "    the frequency, the larger the font size and the closer to white the word \n"
                     << "    will appear.\n"
                     << '\n'
-                    << "    Specifying a common words list can help you understand your text, by "
-                       "using\n"
+                    << "    Specifying a common words list can help you understand your text, by using\n"
                     << "    color to indicate how common each word is.  If a common words list is\n"
-                    << "    specified with '-c FILE' or '--common=FILE', then any word contained "
-                       "in\n"
+                    << "    specified with '-c FILE' or '--common=FILE', then any word contained in\n"
                     << "    that list will be colored to indicate where in the file it occurred.\n"
-                    << "    White indicates that the word appeared near the top of the list, "
-                       "followed\n"
-                    << "    by yellow, then orange, then brown.  A list of the ten-thousand most "
-                       "common\n"
-                    << "    English words is provided in 'media/data/text-commons-ordered.txt'.  "
-                       "You can\n"
-                    << "    force all common words to be ignored with '-w' or "
-                       "'--will-ignore-common=yes'.\n"
+                    << "    White indicates that the word appeared near the top of the list, followed\n"
+                    << "    by yellow, then orange, then brown.  A list of the ten-thousand most common\n"
+                    << "    English words is provided in 'media/data/text-commons-ordered.txt'.  You can\n"
+                    << "    force all common words to be ignored with '-w' or '--will-ignore-common=yes'.\n"
                     << '\n'
                     << "    To specify a list of words that should be ignored, use '-i FILE' or\n"
                     << "    '--ignore=FILE'.  This can be repeated on the command line to specify\n"
@@ -149,19 +130,14 @@ namespace word_stacker
                     << "    provided in 'media/data/cpp-keywords.txt', and a list of commonly\n"
                     << "    occurring words in C++ is provided in 'media/data/cpp-commons.txt'.\n"
                     << '\n'
-                    << "    A font must be specified on the command line with '-f FILE' or\n"
-                    << "    '--font=FILE'." << '\n'
+                    << "    A font must be specified on the command line with '-f FILE' or '--font=FILE'." << '\n'
                     << "    Press 'escape', 'q', 'e', or 'c' to exit.\n"
-                    << "    Press 'ctrl - c' to cancel parsing while in progress.\n"
                     << "    Press 'return' to toggle between column and jumble view.\n"
-                    << "    Press 'spacebar' to toggle between showing and not showing the "
-                       "frequency,"
-                    << "    or count, next to each word.\n"
+                    << "    Press 'spacebar' to toggle between showing and not showing the frequency, or count, next to each word.\n"
                     << "    Press 's' to save screenshots in PNG format.\n"
                     << "    Press 'r' to save a text report file.\n"
-                    << "    Press 'l' to see the line length graph\n"
                     << std::endl;
-
+                // clang-format on
                 exit(EXIT_SUCCESS);
             }
 
@@ -467,21 +443,6 @@ namespace word_stacker
             (m_fontSizeMin <= m_fontSizeMax),
             "Invalid argument:  Font size min " << m_fontSizeMin << " is > than font size max "
                                                 << m_fontSizeMax << ".");
-    }
-
-    void ArgsParser::ParseVideoMode(ReportMaker & reportMaker)
-    {
-        auto const VIDEO_MODE{ sf::VideoMode::getDesktopMode() };
-        m_screenWidth = static_cast<float>(VIDEO_MODE.width);
-        m_screenHeight = static_cast<float>(VIDEO_MODE.height);
-        m_bitsPerPixel = VIDEO_MODE.bitsPerPixel;
-
-        if (m_willVerbose)
-        {
-            reportMaker.miscStream()
-                << "Using detected video mode " << VIDEO_MODE.width << "x" << VIDEO_MODE.height
-                << " " << VIDEO_MODE.bitsPerPixel << "bpp.";
-        }
     }
 
     bool ArgsParser::parseCommandLineArgFlag(

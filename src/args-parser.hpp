@@ -6,6 +6,8 @@
 #include "parse-type-enum.hpp"
 #include "report-maker.hpp"
 
+#include <SFML/Window/VideoMode.hpp>
+
 #include <cstddef> //for std::size_t
 #include <string>
 #include <vector>
@@ -19,7 +21,11 @@ namespace word_stacker
     class ArgsParser
     {
       public:
-        ArgsParser(ReportMaker & reportMaker, const std::size_t ARGC, const char * const ARGV[]);
+        ArgsParser(
+            const sf::VideoMode & VIDEO_MODE,
+            ReportMaker & reportMaker,
+            const std::size_t ARGC,
+            const char * const ARGV[]);
 
         void ParseCommandLineArguments(
             ReportMaker & reportMaker, const std::size_t ARGC, const char * const ARGV[]);
@@ -61,8 +67,6 @@ namespace word_stacker
         inline const std::string commonWordsPath() const { return m_commonWordsPath; }
 
       private:
-        void ParseVideoMode(ReportMaker &);
-
         bool parseCommandLineArgFlag(
             const std::string & ARG,
             bool & memberVar,

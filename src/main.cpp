@@ -21,9 +21,16 @@ void saveScreenshot(sf::RenderWindow &);
 
 int main(int argc, char * argv[])
 {
+
+    sf::RenderWindow renderWin(
+        sf::VideoMode::getDesktopMode(), "Word-Stacker", sf::Style::Fullscreen);
+
+    const sf::VideoMode VIDEO_MODE(
+        renderWin.getSize().x, renderWin.getSize().y, renderWin.getSettings().depthBits);
+
     ReportMaker reportMaker;
 
-    ArgsParser args(reportMaker, static_cast<std::size_t>(argc), argv);
+    ArgsParser args(VIDEO_MODE, reportMaker, static_cast<std::size_t>(argc), argv);
 
     WordList commonWords({ args.commonWordsPath() });
 
@@ -79,11 +86,6 @@ int main(int argc, char * argv[])
     {
         return EXIT_SUCCESS;
     }
-
-    sf::RenderWindow renderWin(
-        sf::VideoMode(args.screenWidthU(), args.screenHeightU(), args.bitsPerPixel()),
-        "Word-Stacker",
-        sf::Style::Fullscreen);
 
     renderWin.setFramerateLimit(30);
 
