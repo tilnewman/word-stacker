@@ -75,6 +75,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         -Wno-documentation-unknown-command
         -Wno-ctad-maybe-unsupported
         -Wno-unused-function
+        -Wno-ctad-maybe-unsupported
         -Woverloaded-virtual
         -Wcast-align
         -Wformat=2)
