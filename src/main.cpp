@@ -194,14 +194,14 @@ void saveScreenshot(sf::RenderWindow & renderWin)
 
     namespace fs = std::filesystem;
 
-    auto path{ fs::canonical(fs::current_path() / fs::path(ss.str())) };
+    auto path{ fs::absolute(fs::current_path() / fs::path(ss.str())) };
 
     unsigned long long filenameNumber{ 0 };
     while (fs::exists(path))
     {
         ss.str("");
         ss << FILENAME_BASE << "-" << ++filenameNumber << FILENAME_EXT;
-        path = fs::canonical(fs::current_path() / fs::path(ss.str()));
+        path = fs::absolute(fs::current_path() / fs::path(ss.str()));
     }
 
     M_LOG_AND_ASSERT_OR_THROW(
