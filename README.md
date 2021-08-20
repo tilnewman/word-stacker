@@ -7,7 +7,7 @@ In this screenshot we can see the complete works of William Shakespeare split in
 ![screenshoot](https://www.zurreal.com/wordstacker/screenshot5.jpg)
 
 ##
-This screenshot is more for fun.  It shows the frequency of words that do NOT appear in the 10,000 most common English words list.  For example, the word “bolingbroke” appears 173 times, but I have no idea what it means!
+This screenshot is more for fun.  It shows the frequency of words that do NOT appear in the 10,000 most common English words list.  For example, the word “bolingbroke” appears 180 times, but I have no idea what it means!
 ![screenshoot2](https://www.zurreal.com/wordstacker/screenshot6.jpg)
 
 
